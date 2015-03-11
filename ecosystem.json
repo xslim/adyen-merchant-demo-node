@@ -1,0 +1,5 @@
+[{
+  "name": "Merchant",
+  "script": "app.js",
+  "port": 8080
+}]

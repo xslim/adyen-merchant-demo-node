@@ -1,0 +1,42 @@
+extend layout
+block content
+  form(action='/payments/query/')
+    if query
+      input#search(type='text', name="q", placeholder='Mongo Query', value="#{query}").form-control
+    else
+      input#search(type='text', name="q", placeholder='Mongo Query').form-control
+    .small
+      i Ex: 
+      code {"merchantIdentifier":"merchant.com.adyen","merchantReference":"TMRef436293945"}
+  br
+  table.table
+    thead
+      tr
+        th #
+        th Date
+        th Amount
+        th(title="paymentNetwork") Network
+        th Actions
+    each p, i in payments
+      tr(class=(i % 2 == 0) ? 'odd' : 'even')
+        td 
+          a(href='/payments/#{p._id}')
+            span.glyphicon.glyphicon-search
+          br
+          | #{p.merchantIdentifier} / #{p.merchantReference}
+        td
+          | Received: #{p.date}
+          br
+          | Sent: #{p.sent}
+          br
+          | Response: #{p.sentResponse}
+          
+        td #{p.amount} #{p.currencyCode}
+        td #{p.paymentNetwork}
+        td
+          a(href='/payments/#{p._id}/delete') 
+            span.glyphicon.glyphicon-remove
+          a(href='/payments/#{p._id}/send')
+            span.glyphicon.glyphicon-send
+  br
+  pre #{last_pal_resp}
