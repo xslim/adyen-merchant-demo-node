@@ -46,3 +46,15 @@ app.listen(port)
 app.use('/', require('./routes/main').router);
 app.use('/hmac', require('./routes/hmac').router);
 app.use('/payments', require('./routes/payment').router);
+
+app.get('/buy', function(req, res){
+  var products = [
+    {title: "Marker", amount: "2.01", currency: "USD"},
+    {title: "Pen",    amount: "0.01", currency: "USD"},
+    {title: "Pencil", amount: "0.05", currency: "EUR"},
+  ];
+  res.render('buy', {
+          title: "Buy products via WebView",
+          products: products
+        });
+  });

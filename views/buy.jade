@@ -1,0 +1,19 @@
+extend layout
+block content
+  h2 #{title}
+  i
+    #state select product
+  table.table
+    thead
+      tr
+        th Product
+        th Price
+        th Action
+    each p, i in products
+      tr(class=(i % 2 == 0) ? 'odd' : 'even')
+        td #{p.title}
+        td #{p.amount} #{p.currency}
+        td 
+          a(href='adyenpay://?title=#{p.title}&amount=#{p.amount}&currency=#{p.currency}')
+            span.glyphicon.glyphicon-shopping-cart
+        
