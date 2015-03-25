@@ -1,16 +1,12 @@
 var express = require('express'),
-    http  = require('../http'),
-    soapxml2js  = require('../soapxml2js'),
-    querystring = require('querystring'),
-    passport = require('passport')
+    Adyen  = require('../adyen'),
+    passport = require('passport'),
+    db = require('../db');
 
 var last_pal_resp = ""
 
 var router = express.Router();
 
-var xmltoken = require('../xmltoken')
-
-var db = require('../db');
 
 var storage = db.storage
 var Payment = db.Payment
@@ -34,85 +30,40 @@ function send_adyen(doc, callback) {
   var amount_minor_units = doc.amount * 100;
   amount_minor_units = String(amount_minor_units.toFixed(0))
 
+  var adyen = new Adyen({
+    host: credentials.endpoint,
+    userpass: credentials.userpass,
+    merchantAccount: credentials.merchant
+  });
 
-  var args = {
-    amount: amount_minor_units,
-    currency: doc.currencyCode,
-    reference: doc.merchantReference,
-    merchant: credentials.merchant,
-    token: doc.paymentData
-  };
-
-  var xml = xmltoken(args)
-
-  var headers = {
-    //SOAPAction: '"' + soapAction + '"',
-    'Authorization': "Basic " + new Buffer(credentials.userpass).toString("base64"),
-    'Content-Type': "text/xml; charset=utf-8"
-  }
-
-  console.log("\nSending to "+credentials.endpoint+" :\n ", xml)
-  //return res.end(xml);
-
-  http_req = http.request(credentials.endpoint, xml, function(err, response, body) {
+  adyen.authoriseApplePay(doc.merchantReference, doc.paymentData, doc.currencyCode, amount_minor_units, function(err, res){
     if (err) {
-      console.log(err);
-      res.end(String(err));
-    } else {
-      console.log("Responce from PAL ("+response.statusCode+"):\n ", body)
-
-      var regex, match;
-      var resultCode;
-
-      //pspReference
-      regex = /<pspReference .+>(.+)<\/pspReference>/
-      match = body.match(regex);
-      if (match && match[1]) {
-        doc.pspReference = match[1];
-      }
-
-      regex = /<faultstring>(.+)<\/faultstring>/
-      match = body.match(regex);
-
-      if (match && match[1]) {
-        resultCode = match[1];
-      } else {
-        regex = /<resultCode .+>(.+)<\/resultCode>/
-        match = body.match(regex);
-        if (match && match[1]) {
-          resultCode = match[1];
-        }
-      }
-
-
-      if (resultCode) {
-        doc.sent = Date.now();
-        doc.sentResponse = resultCode;
-        if (resultCode == 'Authorised') {
-          doc.status = 'Authorised';
-        }
-      }
-      doc.save();
-
-      soapxml2js(body, function(parsed){
-
-        if (parsed) {
-          doc.pgResponse = parsed;
-          doc.save();
-        }
-
-        if (resultCode) {
-          callback(null, resultCode, body);
-        } else {
-          callback(true, null, body);
-        }
-
-      })
-
-
-
+      return callback(true, null, res);
     }
-  }, headers, {});
+
+    var resultCode = res['resultCode'];
+
+    doc.sent = Date.now();
+    doc.sentResponse = resultCode;
+    doc.status = resultCode;
+    doc.pgResponse = res;
+
+    if (res['refusalReason']) {
+      doc.sentResponse = res['refusalReason'];
+    }
+    if (res['pspReference']) {
+      doc.pspReference = res['pspReference'];
+    }
+
+    doc.save();
+
+    if (resultCode) {
+      callback(null, resultCode, res);
+    } else {
+      callback(true, null, res);
+    }
+
+  });
 }
 
 router.post('/', function(req, res){
@@ -129,8 +80,8 @@ router.post('/', function(req, res){
       } else {
         //
 
-        send_adyen(p, function (err, data, body){
-          last_pal_resp = body
+        send_adyen(p, function (err, data, json){
+          last_pal_resp = JSON.stringify(json, null, 2)
           if (err) {
             return res.sendStatus(406)
           }
@@ -316,8 +267,8 @@ router.get('/:id/send', function(req, res){
       return
     }
 
-    send_adyen(doc, function (err, data, body){
-      last_pal_resp = body
+    send_adyen(doc, function (err, data, json){
+      last_pal_resp = JSON.stringify(json, null, 2)
       if (err) {
         return res.end(String(body))
       }
