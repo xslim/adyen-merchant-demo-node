@@ -39,6 +39,7 @@ var paymentSchema = Schema({
   sent: Date,
   sentResponse: String,
   responseBody: String,
+  pspReference: String,
 
   paymentMethod: String,
   merchantIdentifier: String,
@@ -79,6 +80,7 @@ var paymentSchema = Schema({
   shippingMethod: String,
 
   token: Object,
+  pgResponse: Object,
   cryptogram: String,
   status: String
 })

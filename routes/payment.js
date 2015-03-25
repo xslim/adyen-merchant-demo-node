@@ -1,5 +1,6 @@
 var express = require('express'),
     http  = require('../http'),
+    soapxml2js  = require('../soapxml2js'),
     querystring = require('querystring'),
     passport = require('passport')
 
@@ -61,42 +62,54 @@ function send_adyen(doc, callback) {
       console.log("Responce from PAL ("+response.statusCode+"):\n ", body)
 
       var regex, match;
+      var resultCode;
+
+      //pspReference
+      regex = /<pspReference .+>(.+)<\/pspReference>/
+      match = body.match(regex);
+      if (match && match[1]) {
+        doc.pspReference = match[1];
+      }
 
       regex = /<faultstring>(.+)<\/faultstring>/
       match = body.match(regex);
 
       if (match && match[1]) {
-        doc.sent = Date.now();
-        doc.sentResponse = match[1];
-        doc.responseBody = body;
-        doc.save();
-
-        //return res.redirect('/payments')
-        //return res.end(match[1])
-        return callback(null, match[1], body);
+        resultCode = match[1];
+      } else {
+        regex = /<resultCode .+>(.+)<\/resultCode>/
+        match = body.match(regex);
+        if (match && match[1]) {
+          resultCode = match[1];
+        }
       }
 
-      regex = /<resultCode .+>(.+)<\/resultCode>/
-      match = body.match(regex);
 
-      if (match && match[1]) {
+      if (resultCode) {
         doc.sent = Date.now();
-        doc.sentResponse = match[1];
-        doc.responseBody = body;
-
-        if (match[1] == 'Authorised') {
+        doc.sentResponse = resultCode;
+        if (resultCode == 'Authorised') {
           doc.status = 'Authorised';
         }
-
-        doc.save();
-
-        //return res.redirect('/payments')
-        //return res.end(match[1])
-        return callback(null, match[1], body);
       }
+      doc.save();
 
-      //res.end(body);
-      callback(true, null, body);
+      soapxml2js(body, function(parsed){
+
+        if (parsed) {
+          doc.pgResponse = parsed;
+          doc.save();
+        }
+
+        if (resultCode) {
+          callback(null, resultCode, body);
+        } else {
+          callback(true, null, body);
+        }
+
+      })
+
+
 
     }
   }, headers, {});
@@ -152,7 +165,7 @@ router.get('/',
   function(req, res){
   var env = process.env.api_env
 
-  var limit = (req.query.limit) ? req.query.limit : 10;
+  var limit = (req.query.limit) ? req.query.limit : 20;
 
   var query = Payment.find().limit(limit).sort('-date');
   query.select('-paymentData -token');

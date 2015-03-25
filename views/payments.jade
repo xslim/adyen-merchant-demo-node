@@ -24,6 +24,9 @@ block content
             span.glyphicon.glyphicon-search
           br
           | #{p.merchantIdentifier} / #{p.merchantReference}
+          if p.pspReference
+            br
+            | psp: #{p.pspReference}
         td
           | Received: #{p.date}
           br
