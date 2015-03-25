@@ -94,7 +94,15 @@ Adyen.prototype.request = function(webapp, service, method, data, callback) {
 
   return rawrequest(url, this.options.userpass, data, function(err, response, body) {
     if (typeof body === "string") {
-      body = JSON.parse(body);
+
+      try {
+        body = JSON.parse(body)
+      } catch (e) {
+        console.log("Body parse err", body)
+        body = {
+          data: body
+        }
+      }
     }
 
     callback(err, body);
