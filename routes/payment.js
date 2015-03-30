@@ -1,7 +1,10 @@
 var express = require('express'),
     Adyen  = require('../adyen'),
     passport = require('passport'),
-    db = require('../db');
+    db = require('../db'),
+    moment = require('moment');
+
+//moment().format();
 
 var last_pal_resp = ""
 
@@ -111,21 +114,36 @@ router.post('/', function(req, res){
   }
 });
 
+function currencyFormat(abbr) {
+  if (abbr == 'USD') return '$';
+  if (abbr == 'GBP') return '£';
+  if (abbr == 'EUR') return '€';
+
+}
+
 router.get('/',
   passport.authenticate('basic', { session: false }),
   function(req, res){
   var env = process.env.api_env
+  var dateFormat = 'MM.DD.YYYY';
 
   var limit = (req.query.limit) ? req.query.limit : 20;
 
   var query = Payment.find().limit(limit).sort('-date');
   query.select('-paymentData -token');
-  query.exec(function (err, ps) {
+  query.lean().exec(function (err, ps) {
     if (err) {
       console.log(err)
       res.end(err)
       return
     }
+    
+    ps.forEach(function(item, i, a){
+      item.date = moment(item.date).format(dateFormat);
+      item.sent = moment(item.sent).format(dateFormat);
+      item.currency = currencyFormat(item.currencyCode);
+    });
+    
 
     res.format({
       json: function(){
@@ -207,8 +225,9 @@ router.get('/query/:q?', function(req, res){
 router.get('/:id', function(req, res){
   var id = req.params.id
   var field = req.params.field
+  var dateFormat = 'MM.DD.YYYY';
 
-  Payment.findById(id, function (err, doc) {
+  Payment.findById(id).lean().exec(function (err, doc) {
     if (err) {
       console.log(err)
       res.end(err)
@@ -217,7 +236,18 @@ router.get('/:id', function(req, res){
     if (field != null) {
       doc = doc[field]
     }
-    res_json(res, doc)
+      doc.date = moment(doc.date).format(dateFormat);
+      doc.sent = moment(doc.sent).format(dateFormat);
+      doc.currency = currencyFormat(doc.currencyCode);
+    //res_json(res, doc)
+    res.format({
+      json: function(){
+        res.json(doc)
+      },
+      html: function() {
+        res.render('payment_item', {title: "Payment", p: doc, json: JSON.stringify(doc, null, 4)})
+      }
+    })
   })
 });
 
