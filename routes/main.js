@@ -13,20 +13,18 @@ router.get('/about', function(req, res){
 });
 
 router.get('/', function(req, res){
-  var env = process.env.api_env
-  res.render('index', { title: 'Merchant', env: env });
+  res.render('index', { title: 'Merchant' });
 });
 
 router.get('/env', function(req, res){
 
-  var env = process.env.api_env
   var envs = [
   {type: 'dev',  endpoint: storage.getCredentials('dev').endpoint},
   {type: 'test', endpoint: storage.getCredentials('test').endpoint},
   {type: 'live', endpoint: storage.getCredentials('live').endpoint}
   ]
 
-  res.render('env', { title: 'Merchant', env: env, envs:envs });
+  res.render('env', { title: 'Merchant', envs:envs });
 });
 
 router.get('/env/:type', function(req, res){

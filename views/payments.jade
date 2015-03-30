@@ -1,5 +1,7 @@
 extend layout
 block content
+  p
+    a.btn.btn-default(href='/payments/new') Add
   form(action='/payments/query/')
     if query
       input#search(type='text', name="q", placeholder='Mongo Query', value="#{query}").form-control

@@ -10,9 +10,12 @@ var last_pal_resp = ""
 
 var router = express.Router();
 
+var mongoose = require('mongoose');
+var Merchant = mongoose.model('Merchant');
+var Payment = mongoose.model('Payment');
+
 
 var storage = db.storage
-var Payment = db.Payment
 
 function res_json(res, json) {
   res.format({
@@ -124,7 +127,6 @@ function currencyFormat(abbr) {
 router.get('/',
   passport.authenticate('basic', { session: false }),
   function(req, res){
-  var env = process.env.api_env
   var dateFormat = 'MM.DD.YYYY';
 
   var limit = (req.query.limit) ? req.query.limit : 20;
@@ -152,7 +154,6 @@ router.get('/',
       html: function() {
         res.render('payments', {
           title: "Payments",
-          env: env,
           payments: ps,
           last_pal_resp: last_pal_resp})
       }
@@ -160,6 +161,9 @@ router.get('/',
   })
 });
 
+router.get('/new', function(req, res){
+  res.render('payment_new')
+});
 
 router.get('/purge/:yes?', function(req, res){
   var yes = req.params.yes

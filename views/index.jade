@@ -4,26 +4,3 @@ block content
   if message
     p= message
   br
-  form(action='/payments', method='post').form-horizontal
-    .form-group
-      label.col-sm-2.control-label Reference
-      .col-sm-10
-        input(name='merchantReference', value='apple_pay_test').form-control
-    .form-group
-      label.col-sm-2.control-label Amount
-      .col-sm-10
-        input(name='amount',type='number', step="any", min='0.01', value='0.50').form-control
-    .form-group
-      label.col-sm-2.control-label Currency
-      .col-sm-10
-        select(name='currencyCode').form-control
-          option USD
-          option EUR
-          option GBP
-    .form-group
-      label.col-sm-2.control-label ApplePay Token
-      .col-sm-10
-        textarea(name='paymentData', rows='3').form-control
-    .form-group
-      .col-sm-offset-2.col-sm-10
-        button(type='submit').btn.btn-default Send

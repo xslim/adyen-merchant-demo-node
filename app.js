@@ -7,11 +7,32 @@ var fs = require('fs'),
 
 var bodyParser = require('body-parser');
 
+
+
+
 var dump = require('./dump')
 
 if (fs.existsSync(__dirname + '/.env' )) {
   env(__dirname + '/.env')
 }
+
+// ------ Database
+
+var mongoose = require('mongoose');
+mongoose.connect(process.env.MONGOHQ_URL || "localhost");
+
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function callback () {
+  // console.log('Connected!')
+});
+
+// Bootstrap models
+fs.readdirSync(__dirname + '/models').forEach(function (file) {
+  if (~file.indexOf('.js')) require(__dirname + '/models/' + file);
+});
+
+// ------ / Database
 
 var app  = express();
 var port = process.env.PORT || 8080;
@@ -40,6 +61,11 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 app.use(express.static(path.join(__dirname, 'public')));
 
+
+app.use(function (req, res, next) {
+   res.locals.env = process.env.api_env;
+   next();
+});
 
 app.listen(port)
 

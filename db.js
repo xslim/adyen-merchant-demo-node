@@ -1,13 +1,6 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-mongoose.connect(process.env.MONGOHQ_URL || "localhost");
-
-var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function callback () {
-  // console.log('Connected!')
-});
 
 function getCredentials(env) {
   var cred = {}
@@ -33,61 +26,6 @@ function getCredentials(env) {
   return cred
 }
 
-var paymentSchema = Schema({
-  date: { type: Date, default: Date.now },
-
-  sent: Date,
-  sentResponse: String,
-  responseBody: String,
-  pspReference: String,
-
-  paymentMethod: String,
-  merchantIdentifier: String,
-  merchantReference: String,
-  amount: Number,
-  currencyCode: String,
-  countryCode: String,
-  applicationData: String,
-
-  paymentInstrumentName: String,
-  paymentNetwork: String,
-  transactionIdentifier: String,
-  paymentData: String,
-
-  billingAddress: {
-    name: String,
-    email: String,
-    phone: String,
-
-    street: String,
-    city: String,
-    state: String,
-    zip: String,
-    countryCode: String
-  },
-  shippingAddress: {
-    name: String,
-    email: String,
-    phone: String,
-
-    street: String,
-    city: String,
-    state: String,
-    zip: String,
-    countryCode: String
-  },
-
-  shippingMethod: String,
-
-  token: Object,
-  pgResponse: Object,
-  cryptogram: String,
-  status: String
-})
-var Payment = mongoose.model('Payment', paymentSchema)
-
-module.exports.db = db;
-module.exports.Payment = Payment;
 module.exports.storage = {
   getCredentials: function(env) {
     return getCredentials(env)
