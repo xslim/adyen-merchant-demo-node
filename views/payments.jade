@@ -18,7 +18,6 @@ block content
         th Amount
         th(title="paymentNetwork") Network
         th Response
-        th Actions
     each p, i in payments
       tr(class=(i % 2 == 0) ? 'odd' : 'even')
         td 
@@ -27,13 +26,8 @@ block content
             |&nbsp;-&gt;&nbsp;#{p.sent}
         td #{p.merchantReference}
         td #{p.pspReference}
-        td #{p.amount} #{p.currency}
+        td #{p.currency} #{p.amount} 
         td #{p.paymentNetwork}
         td #{p.sentResponse}
-        td
-          a(href='/payments/#{p._id}/delete') 
-            span.glyphicon.glyphicon-remove
-          a(href='/payments/#{p._id}/send')
-            span.glyphicon.glyphicon-send
   br
   pre #{last_pal_resp}

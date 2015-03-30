@@ -236,6 +236,10 @@ router.get('/:id', function(req, res){
     if (field != null) {
       doc = doc[field]
     }
+
+    var json = JSON.stringify(doc, null, 4);
+    var jsonPG = JSON.stringify(doc.pgResponse, null, 4);
+
       doc.date = moment(doc.date).format(dateFormat);
       doc.sent = moment(doc.sent).format(dateFormat);
       doc.currency = currencyFormat(doc.currencyCode);
@@ -245,7 +249,12 @@ router.get('/:id', function(req, res){
         res.json(doc)
       },
       html: function() {
-        res.render('payment_item', {title: "Payment", p: doc, json: JSON.stringify(doc, null, 4)})
+        res.render('payment_item', {
+          title: "Payment", 
+          p: doc, 
+          json: json, 
+          pgResponse: jsonPG
+        })
       }
     })
   })

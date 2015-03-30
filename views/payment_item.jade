@@ -1,30 +1,35 @@
 extend layout
 block content
+  h3 Payment #{p._id}
+
   table.table
     thead
       tr
-        th Date
         th Ref
         th PSP
         th Amount
         th(title="paymentNetwork") Network
         th Response
-        th Actions
       tr(class=(i % 2 == 0) ? 'odd' : 'even')
-        td 
-          a(href='/payments/#{p._id}', title='Sent: #{p.sent}') #{p.date}
-          if p.date != p.sent
-            |&nbsp;-&gt;&nbsp;#{p.sent}
         td #{p.merchantReference}
         td #{p.pspReference}
-        td #{p.amount} #{p.currency}
+        td #{p.currency} #{p.amount} 
         td #{p.paymentNetwork}
         td #{p.sentResponse}
-        td
-          a(href='/payments/#{p._id}/delete') 
-            span.glyphicon.glyphicon-remove
-          a(href='/payments/#{p._id}/send')
-            span.glyphicon.glyphicon-send
-  br
+  h3 Actions
+    
+  a.btn.btn-danger(href='/payments/#{p._id}/delete') 
+    span.glyphicon.glyphicon-remove
+    | &nbsp; Delete
+  |&nbsp; 
+  a.btn.btn-warning(href='/payments/#{p._id}/send')
+    span.glyphicon.glyphicon-send
+    | &nbsp; Re-send
+  
+  h3 Payment gateway response
+  pre
+    code(class='js') #{pgResponse}
+
+  h3 Full object
   pre
     code(class='js') #{json}
