@@ -309,7 +309,7 @@ router.get('/:id/send', function(req, res){
     send_adyen(doc, function (err, data, json){
       last_pal_resp = JSON.stringify(json, null, 2)
       if (err) {
-        return res.end(String(body))
+        return res.end(String(data))
       }
       res.header('Cache-Control', 'no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
       res.redirect('back')
