@@ -8,8 +8,21 @@ var Merchant = mongoose.model('Merchant');
 var Payment = mongoose.model('Payment');
 
 router.post('/notification', function(req, res){
+  var data = req.body;
 
-  console.log('incoming:', req.body);
+  console.log('incoming:', JSON.stringify(req.body));
+
+  if (data.notificationItems) {
+    data.notificationItems.forEach(function(item){
+      if (item.NotificationRequestItem) {
+        console.log(item.NotificationRequestItem)
+      }
+
+    });
+  }
+
+  res.end();
+
 });
 
 
