@@ -49,6 +49,7 @@ var PaymentSchema = Schema({
 
   token: Object,
   pgResponse: Object,
+  notification: Object,
   cryptogram: String,
   status: String
 })
@@ -59,4 +60,3 @@ PaymentSchema.statics = {
 }
 
 mongoose.model('Payment', PaymentSchema);
-
