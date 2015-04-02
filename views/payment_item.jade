@@ -25,7 +25,18 @@ block content
   a.btn.btn-warning(href='/payments/#{p._id}/send')
     span.glyphicon.glyphicon-send
     | &nbsp; Re-send
+  |&nbsp; 
   
+  br
+  br
+  form.form-inline(action='/payments/#{p._id}/capture', method='post')
+    .form-group
+      input.form-control(name='amount',type='number', step='any', min='0.0', value='#{p.amount}')
+    .form-group
+      button.btn.btn-default(type='submit') Capture
+    .form-group
+      a.btn.btn-warning(href='/payments/#{p._id}/void') Void
+
   h3 Payment gateway response
   pre
     code(class='js') #{pgResponse}

@@ -129,10 +129,10 @@ router.get('/',
   function(req, res){
   var dateFormat = 'MM.DD.YYYY';
 
-  var limit = (req.query.limit) ? req.query.limit : 20;
+  var limit = (req.query.limit) ? req.query.limit : 40;
 
   var query = Payment.find().limit(limit).sort('-date');
-  query.select('-paymentData -token');
+  query.select('-paymentData -token -pgResponse');
   query.lean().exec(function (err, ps) {
     if (err) {
       console.log(err)

@@ -72,6 +72,7 @@ app.listen(port)
 app.use('/', require('./routes/main').router);
 app.use('/hmac', require('./routes/hmac').router);
 app.use('/payments', require('./routes/payment').router);
+app.use('/api/adyen', require('./routes/adyen').router);
 
 app.get('/buy', function(req, res){
   var products = [
