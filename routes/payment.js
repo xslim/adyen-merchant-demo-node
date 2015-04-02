@@ -1,18 +1,15 @@
 var express = require('express'),
     Adyen  = require('../adyen'),
     passport = require('passport'),
-    db = require('../db'),
-    moment = require('moment');
+    db = require('../db');
 
-//moment().format();
-
-var last_pal_resp = ""
 
 var router = express.Router();
 
 var mongoose = require('mongoose');
 var Merchant = mongoose.model('Merchant');
 var Payment = mongoose.model('Payment');
+var PaymentOperation = mongoose.model('PaymentOperation');
 
 
 var storage = db.storage
@@ -42,29 +39,51 @@ function send_adyen(doc, callback) {
     merchantAccount: credentials.merchant
   });
 
-  adyen.authoriseApplePay(doc.merchantReference, doc.paymentData, doc.currencyCode, amount_minor_units, function(err, res){
+  var paymentOperation = doc.newOperation('authoriseApplePay');
+
+  adyen.authoriseApplePay(doc.merchantReference, doc.paymentData, doc.currencyCode, amount_minor_units, function(err, res, sentData){
+
+    // Mongo will not save if there is a '.' in field... which we have...
+    //var sd = JSON.stringify(sentData);
+    //paymentOperation.sent = sd;
+
     if (err) {
+      paymentOperation.save();
       return callback(true, null, res);
     }
 
-    var resultCode = res['resultCode'];
+    paymentOperation.response = res;
 
-    doc.sent = Date.now();
-    doc.sentResponse = resultCode;
-    doc.status = resultCode;
-    doc.pgResponse = res;
-
+    // last result
+    var result = res['resultCode'];
     if (res['refusalReason']) {
-      doc.sentResponse = res['refusalReason'];
+      result = res['refusalReason'];
+    } else if (res['errorCode']) {
+      result = res['errorCode'];
     }
+
+    paymentOperation.result = result;
+    doc.sentResponse = result;
+
+
     if (res['pspReference']) {
-      doc.pspReference = res['pspReference'];
+      paymentOperation.pspReference = res['pspReference'];
+    }
+
+    // this is Authorise payment, the PSP Ref will be the main, so override it
+    if (paymentOperation.pspReference) {
+      doc.pspReference = paymentOperation.pspReference;
     }
 
     doc.save();
+    paymentOperation.save(function (err) {
+      if (err) {
+        console.log('error saving paymentOperation', err);
+      }
+    });
 
-    if (resultCode) {
-      callback(null, resultCode, res);
+    if (result) {
+      callback(null, result, res);
     } else {
       callback(true, null, res);
     }
@@ -87,7 +106,6 @@ router.post('/', function(req, res){
         //
 
         send_adyen(p, function (err, data, json){
-          last_pal_resp = JSON.stringify(json, null, 2)
           if (err) {
             return res.sendStatus(406)
           }
@@ -127,8 +145,6 @@ function currencyFormat(abbr) {
 router.get('/',
   passport.authenticate('basic', { session: false }),
   function(req, res){
-  var dateFormat = 'MM.DD.YYYY';
-
   var limit = (req.query.limit) ? req.query.limit : 40;
 
   var query = Payment.find().limit(limit).sort('-date');
@@ -139,13 +155,11 @@ router.get('/',
       res.end(err)
       return
     }
-    
+
     ps.forEach(function(item, i, a){
-      item.date = moment(item.date).format(dateFormat);
-      item.sent = moment(item.sent).format(dateFormat);
       item.currency = currencyFormat(item.currencyCode);
     });
-    
+
 
     res.format({
       json: function(){
@@ -154,8 +168,7 @@ router.get('/',
       html: function() {
         res.render('payments', {
           title: "Payments",
-          payments: ps,
-          last_pal_resp: last_pal_resp})
+          payments: ps})
       }
     })
   })
@@ -231,7 +244,7 @@ router.get('/:id', function(req, res){
   var field = req.params.field
   var dateFormat = 'MM.DD.YYYY';
 
-  Payment.findById(id).lean().exec(function (err, doc) {
+  Payment.findById(id).populate('operations').lean().exec(function (err, doc) {
     if (err) {
       console.log(err)
       res.end(err)
@@ -241,12 +254,11 @@ router.get('/:id', function(req, res){
       doc = doc[field]
     }
 
-    var json = JSON.stringify(doc, null, 4);
-    var jsonPG = JSON.stringify(doc.pgResponse, null, 4);
+    doc.currency = currencyFormat(doc.currencyCode);
 
-      doc.date = moment(doc.date).format(dateFormat);
-      doc.sent = moment(doc.sent).format(dateFormat);
-      doc.currency = currencyFormat(doc.currencyCode);
+    if (!doc.operations) doc.operations = [];
+    if (!doc.notifications) doc.notifications = [];
+
     //res_json(res, doc)
     res.format({
       json: function(){
@@ -254,10 +266,8 @@ router.get('/:id', function(req, res){
       },
       html: function() {
         res.render('payment_item', {
-          title: "Payment", 
-          p: doc, 
-          json: json, 
-          pgResponse: jsonPG
+          title: "Payment",
+          p: doc
         })
       }
     })
@@ -291,6 +301,14 @@ router.get('/status/:merchant/:reference', function(req, res){
   })
 });
 
+router.get('/:id/operation/:opid/delete', function(req, res){
+  var id = req.params.id
+  var opid = req.params.opid
+
+  PaymentOperation.findById(opid).remove().exec();
+  res.redirect('/payments/'+id)
+});
+
 router.get('/:id/delete', function(req, res){
   var id = req.params.id
   var field = req.params.field
@@ -311,7 +329,6 @@ router.get('/:id/send', function(req, res){
     }
 
     send_adyen(doc, function (err, data, json){
-      last_pal_resp = JSON.stringify(json, null, 2)
       if (err) {
         return res.end(String(data))
       }

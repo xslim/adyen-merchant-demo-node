@@ -8,28 +8,22 @@ var Merchant = mongoose.model('Merchant');
 var Payment = mongoose.model('Payment');
 
 router.post('/notification', function(req, res){
-  var data = req.body;
+  var notes = Adyen.parseNotifications(req.body);
 
   //console.log('incoming:', JSON.stringify(req.body));
 
-  if (data.notificationItems) {
-    data.notificationItems.forEach(function(item){
-      if (item.NotificationRequestItem) {
-        var note = item.NotificationRequestItem;
-        var psp = note.pspReference;
+  notes.forEach(function(note){
+    Payment.findOneAndUpdate(
+      {'pspReference': note.pspReference},
+      {$push: {notifications: note}},
+      function(err, item){
+        if (err) {
+          console.log('Payment ' + psp + 'update failed: ', err);
+        }
+      });
+  });
 
-        Payment.findOneAndUpdate({'pspReference': psp}, {$set: {notification: note}}, function(err, item){
-          if (err) {
-            console.log('Payment ' + psp + 'update failed: ', err);
-          }
-        });
-      }
-
-    });
-  }
-
-  res.end();
-
+  res.json(Adyen.responses.notification);
 });
 
 

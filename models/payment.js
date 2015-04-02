@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var PaymentSchema = Schema({
+var PaymentSchema = new Schema({
   date: { type: Date, default: Date.now },
 
   sent: Date,
@@ -51,9 +51,23 @@ var PaymentSchema = Schema({
   pgResponse: Object,
   notification: Object,
   cryptogram: String,
-  status: String
-})
+  status: String,
+  operations: [{ type: Schema.Types.ObjectId, ref: 'PaymentOperation' }],
+  notifications: []
+});
 
+PaymentSchema.methods.newOperation = function (type) {
+  var PaymentOperation = mongoose.model('PaymentOperation');
+  var paymentOperation = new PaymentOperation({
+    paymentId: this._id,
+    reference: this.merchantReference,
+    action:    type
+  });
+  paymentOperation.save();
+  this.operations.push(paymentOperation);
+  this.save();
+  return paymentOperation;
+}
 
 PaymentSchema.statics = {
 

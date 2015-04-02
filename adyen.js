@@ -89,8 +89,8 @@ METHOD="authorise"
 Adyen.prototype.request = function(webapp, service, method, data, callback) {
   var url = this.options.host + '/' + webapp + '/servlet/' + service + '/V9/' + method;
 
-  console.log("Requesting", url);
-  console.log("Data", data);
+  //console.log("Requesting", url);
+  //console.log("Data", data);
 
   return rawrequest(url, this.options.userpass, data, function(err, response, body) {
     if (typeof body === "string") {
@@ -124,9 +124,30 @@ Adyen.prototype.authoriseApplePay = function(reference, token, currency, value, 
   this.request('pal', 'Payment', 'authorise', data, function(err, res){
     console.log("err", err);
     console.log("res", res);
-    callback(err, res);
+    callback(err, res, data);
   })
 }
+
+Adyen.parseNotifications = function(data) {
+  var notes = [];
+  if (!data.notificationItems) {
+    return notes;
+  }
+
+  data.notificationItems.forEach(function(item){
+    if (item.NotificationRequestItem) {
+      notes.push(item.NotificationRequestItem);
+    }
+  });
+  return notes;
+};
+
+Adyen.responses = {
+  notification: {
+    notificationResponse: "[accepted]"
+  }
+}
+
 
 module.exports = exports = Adyen;
 

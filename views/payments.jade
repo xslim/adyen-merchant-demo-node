@@ -10,7 +10,6 @@ block content
     .small
       i Ex: 
       code {"merchantIdentifier":"merchant.com.adyen","merchantReference":"TMRef436293945"}
-  br
   table.table
     thead
       tr
@@ -23,9 +22,7 @@ block content
     each p, i in payments
       tr(class=(i % 2 == 0) ? 'odd' : 'even')
         td 
-          a(href='/payments/#{p._id}', title='Sent: #{p.sent}') #{p.date}
-          if p.date != p.sent
-            |&nbsp;-&gt;&nbsp;#{p.sent}
+          a(href='/payments/#{p._id}') #{moment(p.date).format('DD.MM.YYYY HH:mm:ss')}
         td #{p.merchantReference}
         td #{p.pspReference}
         td #{p.currency} #{p.amount} 

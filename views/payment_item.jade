@@ -1,7 +1,6 @@
 extend layout
 block content
   h3 Payment #{p._id}
-
   table.table
     thead
       tr
@@ -10,14 +9,29 @@ block content
         th Amount
         th(title="paymentNetwork") Network
         th Response
-      tr(class=(i % 2 == 0) ? 'odd' : 'even')
+        th Actions
+      tr
         td #{p.merchantReference}
         td #{p.pspReference}
         td #{p.currency} #{p.amount} 
         td #{p.paymentNetwork}
         td #{p.sentResponse}
+        td
+          a(data-toggle="modal" href="#rawData")
+            span.glyphicon.glyphicon-search
+  
+  .modal.fade(id="rawData" tabindex="-1" role="dialog" aria-hidden="true")
+    .modal-dialog
+      .modal-content
+        .modal-header
+          button.close(type="button" data-dismiss="modal" aria-label="Close")
+            span(aria-hidden="true") &times;
+          h4.modal-title Raw JSON
+        .modal-body
+          pre
+            code(class='js') !{JSON.stringify(p, null, 4)}
+  
   h3 Actions
-    
   a.btn.btn-danger(href='/payments/#{p._id}/delete') 
     span.glyphicon.glyphicon-remove
     | &nbsp; Delete
@@ -26,9 +40,7 @@ block content
     span.glyphicon.glyphicon-send
     | &nbsp; Re-send
   |&nbsp; 
-  
-  br
-  br
+
   form.form-inline(action='/payments/#{p._id}/capture', method='post')
     .form-group
       input.form-control(name='amount',type='number', step='any', min='0.0', value='#{p.amount}')
@@ -36,11 +48,69 @@ block content
       button.btn.btn-default(type='submit') Capture
     .form-group
       a.btn.btn-warning(href='/payments/#{p._id}/void') Void
-
-  h3 Payment gateway response
-  pre
-    code(class='js') #{pgResponse}
-
-  h3 Full object
-  pre
-    code(class='js') #{json}
+  
+  
+  h3 Operations
+  table.table
+    thead
+      tr
+        th Date
+        th action
+        th PSP
+        th Ref
+        th Result
+        th Actions
+    each op, i in p.operations
+      tr(class=(i % 2 == 0) ? 'odd' : 'even')
+        td= moment(op.date).format('DD.MM.YYYY HH:mm:ss')
+        td= op.action
+        td= op.pspReference
+        td= op.reference
+        td= op.result
+        td
+          a(data-toggle="modal" href="#rawOP#{i}")
+            span.glyphicon.glyphicon-search
+          a.text-danger(href='/payments/#{p._id}/operation/#{op._id}/delete')
+            span.glyphicon.glyphicon-remove
+  
+  each op, i in p.operations
+    .modal.fade(id="rawOP#{i}" tabindex="-1" role="dialog" aria-hidden="true")
+      .modal-dialog
+        .modal-content
+          .modal-header
+            button.close(type="button" data-dismiss="modal" aria-label="Close")
+              span(aria-hidden="true") &times;
+            h4.modal-title #{moment(op.date).format('DD.MM.YYYY HH:mm:ss')} - #{op.action}
+          .modal-body
+            pre
+              code(class='js') !{JSON.stringify(op, null, 4)}
+    
+  h3 Notifications
+  table.table
+    thead
+      tr
+        th Date
+        th PSP
+        th Ref
+        th Event Code
+    each note, i in p.notifications
+      tr(class=(i % 2 == 0) ? 'odd' : 'even')
+        td
+          a(data-toggle="modal" href="#rawNote#{i}")
+            span.glyphicon.glyphicon-search
+          = moment(note.eventDate).format('DD.MM.YYYY HH:mm:ss')
+        td= note.pspReference
+        td= note.merchantReference
+        td= note.eventCode
+  
+  each note, i in p.notifications
+    .modal.fade(id="rawNote#{i}" tabindex="-1" role="dialog" aria-hidden="true")
+      .modal-dialog
+        .modal-content
+          .modal-header
+            button.close(type="button" data-dismiss="modal" aria-label="Close")
+              span(aria-hidden="true") &times;
+            h4.modal-title #{moment(note.eventDate).format('DD.MM.YYYY HH:mm:ss')}
+          .modal-body
+            pre
+              code(class='js') !{JSON.stringify(note, null, 4)}  

@@ -67,6 +67,8 @@ app.use(function (req, res, next) {
    next();
 });
 
+app.locals.moment = require('moment');
+
 app.listen(port)
 
 app.use('/', require('./routes/main').router);
