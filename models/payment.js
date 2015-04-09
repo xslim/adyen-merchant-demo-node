@@ -58,15 +58,18 @@ var PaymentSchema = new Schema({
 });
 
 PaymentSchema.methods.newOperation = function(type) {
+  var p = this;
   var PaymentOperation = mongoose.model('PaymentOperation');
   var paymentOperation = new PaymentOperation({
-    paymentId: this._id,
-    reference: this.merchantReference,
+    paymentId: p._id,
+    reference: p.merchantReference,
     action:    type
   });
-  paymentOperation.save();
-  this.operations.push(paymentOperation);
-  this.save();
+
+  paymentOperation.save(function(err){
+    p.operations.push(paymentOperation);
+    p.save();
+  });
   return paymentOperation;
 }
 

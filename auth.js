@@ -131,6 +131,7 @@ module.exports = {
     if (req.isAuthenticated())
       return next();
     // if the user is not authenticated then redirect him to the login page
+    req.session.redirect_to = req.originalUrl;
     res.redirect('/login');
   },
 

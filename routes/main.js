@@ -18,10 +18,14 @@ router.get('/login', function(req, res) {
 });
 
 router.post('/login', passport.authenticate('login', {
-  successRedirect: '/payments',
   failureRedirect: '/',
   failureFlash : true
-}));
+}), function(req, res){
+	var redirect_to = req.session.redirect_to ? req.session.redirect_to : '/';
+	delete req.session.redirect_to;
+	//is authenticated ?
+	res.redirect(redirect_to);
+});
 
 router.get('/signup', function(req, res){
   res.render('register',{message: req.flash('message')});
