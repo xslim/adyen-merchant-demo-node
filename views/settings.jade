@@ -1,0 +1,54 @@
+extend layout
+block content
+  form(action='/user/settings', method='post').form-horizontal
+    .form-group
+      label.col-sm-2.control-label Token
+      .col-sm-10
+        span #{user.token}
+    .form-group
+      label.col-sm-2.control-label Username
+      .col-sm-10
+        span #{user.username} (#{user._id})
+    .form-group
+      label.col-sm-2.control-label Email
+      .col-sm-10
+        input.form-control(name='email', value='#{user.email}')
+    .form-group
+      label.col-sm-2.control-label Merchant Account
+      .col-sm-10
+        input.form-control(name='merchantAccount', value='#{user.merchantAccount}')
+    .form-group
+      label.col-sm-2.control-label Platform
+      .col-sm-10
+        select(name='platform').form-control
+          option(selected=user.platform == 'live') live
+          option(selected=user.platform == 'test') test
+    .form-group
+      label.col-sm-2.control-label Live HPP Skin
+      .col-sm-10
+        input.form-control(name='liveHppSkin', value='#{user.liveHppSkin}')
+    .form-group
+      label.col-sm-2.control-label Live HMAC Key
+      .col-sm-10
+        input.form-control(name='liveHmacKey', value='#{user.liveHmacKey}')
+    .form-group
+      label.col-sm-2.control-label Live Adyen API User:Pass
+      .col-sm-10
+        input.form-control(name='liveApiUserpass', value='#{user.liveApiUserpass}')
+    .form-group
+      label.col-sm-2.control-label Test HPP Skin
+      .col-sm-10
+        input.form-control(name='testHppSkin', value='#{user.testHppSkin}')
+    .form-group
+      label.col-sm-2.control-label Test HMAC Key
+      .col-sm-10
+        input.form-control(name='testHmacKey', value='#{user.testHmacKey}')
+    .form-group
+      label.col-sm-2.control-label Test Adyen API User:Pass
+      .col-sm-10
+        input.form-control(name='testApiUserpass', value='#{user.testApiUserpass}')
+    
+    .form-group
+      .col-sm-offset-2.col-sm-10
+        button(type='submit').btn.btn-default Save
+  

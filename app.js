@@ -1,14 +1,10 @@
 var fs = require('fs'),
     env = require('node-env-file'),
     express = require('express'),
-    path = require('path'),
-    passport = require('passport'),
-    BasicStrategy = require('passport-http').BasicStrategy
-
-var bodyParser = require('body-parser');
-
-
-
+    bodyParser = require('body-parser'),
+    cookieParser = require('cookie-parser'),
+    expressSession = require('express-session'),
+    path = require('path');
 
 var dump = require('./dump')
 
@@ -35,17 +31,8 @@ fs.readdirSync(__dirname + '/models').forEach(function (file) {
 // ------ / Database
 
 var app  = express();
-var port = process.env.PORT || 8080;
+var port = process.env.PORT || 3000;
 
-passport.use(new BasicStrategy(
-  function(username, password, done) {
-    if (username == process.env.login && password == process.env.password) {
-      return done(null, {name: "User"});
-    } else {
-      return done(null, false);
-    }
-  }
-));
 
 console.log("Running on " + port);
 
@@ -53,18 +40,26 @@ console.log("Running on " + port);
 //   var storage = require('storage')
 //   storage.connect()
 // }
-
-app.use(passport.initialize());
 app.set('views', __dirname + '/views')
 app.set('view engine', 'jade')
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
+app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(expressSession({secret: 'mySecretKey'}));
+
+var flash = require('connect-flash');
+app.use(flash());
+
+// Auth
+var auth = require('./auth')
+auth.configureExpress(app);
 
 
 app.use(function (req, res, next) {
-   res.locals.env = process.env.api_env;
-   next();
+  res.locals.user = req.user;
+  next();
 });
 
 app.locals.moment = require('moment');
@@ -72,9 +67,9 @@ app.locals.moment = require('moment');
 app.listen(port)
 
 app.use('/', require('./routes/main').router);
-app.use('/hmac', require('./routes/hmac').router);
-app.use('/payments', require('./routes/payment').router);
-app.use('/api/adyen', require('./routes/adyen').router);
+app.use('/user',      auth.authUser, require('./routes/user').router);
+app.use('/payments',  auth.authUser, require('./routes/payment').router);
+app.use('/api',       auth.authApi,  require('./routes/api').router);
 
 app.get('/buy', function(req, res){
   var products = [

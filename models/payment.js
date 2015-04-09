@@ -3,6 +3,7 @@ var Schema = mongoose.Schema;
 
 var PaymentSchema = new Schema({
   date: { type: Date, default: Date.now },
+  merchant: { type: Schema.Types.ObjectId, ref: 'User' },
 
   sent: Date,
   sentResponse: String,
@@ -56,7 +57,7 @@ var PaymentSchema = new Schema({
   notifications: []
 });
 
-PaymentSchema.methods.newOperation = function (type) {
+PaymentSchema.methods.newOperation = function(type) {
   var PaymentOperation = mongoose.model('PaymentOperation');
   var paymentOperation = new PaymentOperation({
     paymentId: this._id,
@@ -67,6 +68,21 @@ PaymentSchema.methods.newOperation = function (type) {
   this.operations.push(paymentOperation);
   this.save();
   return paymentOperation;
+}
+
+PaymentSchema.methods.newAuthOperation = function(type, res) {
+  var operation = this.newOperation(type);
+
+  operation = operation.updateFromAdyen(res);
+  this.sentResponse = operation.result;
+
+  // this is Authorise payment, the PSP Ref will be the main, so override it
+  if (operation.pspReference) {
+    this.pspReference = operation.pspReference;
+  }
+
+  this.save();
+  return operation;
 }
 
 PaymentSchema.statics = {

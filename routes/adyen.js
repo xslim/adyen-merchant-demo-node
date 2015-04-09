@@ -4,7 +4,7 @@ var Adyen  = require('../adyen');
 var router = express.Router();
 
 var mongoose = require('mongoose');
-var Merchant = mongoose.model('Merchant');
+var User = mongoose.model('User');
 var Payment = mongoose.model('Payment');
 
 router.post('/notification', function(req, res){

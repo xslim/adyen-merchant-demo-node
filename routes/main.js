@@ -1,39 +1,42 @@
 var express = require('express');
 var router = express.Router();
+var passport = require('passport');
 
-var storage = require('../db').storage
-
-router.get('/ping', function(req, res){
-  res.send("PONG")
+router.get('/', function(req, res) {
+  // Display the Login page with any flash message, if any
+	if (req.user) {
+		res.redirect('/payments')
+	} else {
+		res.redirect('/login')
+	}
+  // res.render('index', { message: req.flash('message') });
 });
 
-router.get('/about', function(req, res){
-  var content = "Developed by Taras Kalapun <t@kalapun.com> for Adyen B.V.";
-  res.render('index', { title: 'About', message: content });
+router.get('/login', function(req, res) {
+  // Display the Login page with any flash message, if any
+  res.render('login', { title: 'Login', message: req.flash('message') });
 });
 
-router.get('/', function(req, res){
-  res.render('index', { title: 'Merchant' });
+router.post('/login', passport.authenticate('login', {
+  successRedirect: '/payments',
+  failureRedirect: '/',
+  failureFlash : true
+}));
+
+router.get('/signup', function(req, res){
+  res.render('register',{message: req.flash('message')});
 });
 
-router.get('/env', function(req, res){
+router.post('/signup', passport.authenticate('signup', {
+  successRedirect: '/payments',
+  failureRedirect: '/signup',
+  failureFlash : true
+}));
 
-  var envs = [
-  {type: 'dev',  endpoint: storage.getCredentials('dev').endpoint},
-  {type: 'test', endpoint: storage.getCredentials('test').endpoint},
-  {type: 'live', endpoint: storage.getCredentials('live').endpoint}
-  ]
-
-  res.render('env', { title: 'Merchant', envs:envs });
+router.get('/signout', function(req, res) {
+  req.logout();
+  res.redirect('/');
 });
-
-router.get('/env/:type', function(req, res){
-  var type = req.params.type
-  process.env['api_env'] = type;
-  //res.end(type)
-  res.redirect('/')
-});
-
 
 
 module.exports.router = router;

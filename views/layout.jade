@@ -12,22 +12,26 @@ html(lang="en")
     script(src='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/highlight.min.js')
     script(src='/javascripts/main.js')
   body
-
+    
+    nav.navbar.navbar-default
+      .container-fluid
+        .navbar-header
+          a.navbar-brand(href='/')
+            if user
+              | #{user.merchantAccount}
+            else
+              | Merchant
+        div
+          if user
+            ul.nav.navbar-nav.navbar-right
+              li
+                a(href='/payments') Payments
+              li
+                a(href='/user/settings') Settings
+              li
+                a(href='/signout') Signout
     .container
-      .header
-        ul.nav.nav-pills.pull-right
-          li
-            a(href='/payments') Payments
-          li
-            a(href='/buy') Buy
-          li
-            a(href='/about') About
-        h3
-          a(href='/', style="color:gray") Merchant
-          small
-            a(href='/env') #{env}
-
       .row
+        h1 #{title}
         block content
       .footer
-

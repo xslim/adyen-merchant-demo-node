@@ -1,6 +1,10 @@
-var url = require('url');
+var url = require('url'),
+  util = require('util'),
+  crypto = require('crypto');
+
 var Request = require('request');
-var util = require('util')
+
+var debug = false;
 
 function mergeOptions(defaults, options) {
   var keys = Object.keys(defaults)
@@ -19,7 +23,7 @@ function mergeOptions(defaults, options) {
   return options;
 };
 
-function rawrequest(rurl, userpass, data, callback) {
+function rawrequest(rurl, data, options, callback) {
   var curl = url.parse(rurl);
   var secure = curl.protocol === 'https:';
   var host = curl.hostname;
@@ -32,10 +36,22 @@ function rawrequest(rurl, userpass, data, callback) {
     'Content-Type': "application/json",
     "Accept-Encoding": "none",
     "Accept-Charset": "utf-8",
-    'Authorization': "Basic " + new Buffer(userpass).toString("base64"),
     "Connection": "close",
     "Host": host + (isNaN(port) ? "" : ":" + port)
   };
+
+  if (options && options["username"] && options["token"]) {
+    var userpass = options["username"] + ':';
+    headers['Authorization'] = "Basic " + new Buffer(userpass).toString("base64");
+    headers['jaasToken'] = options["token"];
+  } else if (options && options["username"] && options["password"]) {
+    var userpass = options["username"] + ':' + options["password"];
+    headers['Authorization'] = "Basic " + new Buffer(userpass).toString("base64");
+  } else if (options && options["userpass"]) {
+    var userpass = options["userpass"];
+    headers['Authorization'] = "Basic " + new Buffer(userpass).toString("base64");
+  }
+
   var attr;
 
   if (typeof data === 'string') {
@@ -53,6 +69,18 @@ function rawrequest(rurl, userpass, data, callback) {
   };
 
   var request = Request(options, function (error, res, body) {
+
+    if (debug) {
+      console.log('Request: ', error, res, body);
+    }
+
+    if (res.statusCode == 401 && !error) {
+      error = {
+        statusCode: res.statusCode,
+        statusMessage: res.statusMessage
+      }
+    }
+
     if (error) {
       callback(error);
     } else {
@@ -89,10 +117,12 @@ METHOD="authorise"
 Adyen.prototype.request = function(webapp, service, method, data, callback) {
   var url = this.options.host + '/' + webapp + '/servlet/' + service + '/V9/' + method;
 
-  //console.log("Requesting", url);
-  //console.log("Data", data);
+  if (debug) {
+    console.log("Requesting", url);
+    console.log("Data", data);
+  }
 
-  return rawrequest(url, this.options.userpass, data, function(err, response, body) {
+  return rawrequest(url, data, this.options, function(err, response, body) {
     if (typeof body === "string") {
 
       try {
@@ -141,6 +171,26 @@ Adyen.parseNotifications = function(data) {
   });
   return notes;
 };
+
+Adyen.endpoint = function(platform) {
+  if (platform == 'test') {
+    return "https://pal-test.adyen.com";
+  }
+  return "https://pal-live.adyen.com";
+}
+
+Adyen.hmac = function(text, key) {
+  var hmac = crypto.createHmac('sha1', key);
+  hmac.setEncoding('base64');
+  hmac.write(text);
+  hmac.end();
+  return hmac.read();
+}
+
+Adyen.amount2minorUnits = function(amount) {
+  var amount_minor_units = amount * 100;
+  return String(amount_minor_units.toFixed(0))
+}
 
 Adyen.responses = {
   notification: {
