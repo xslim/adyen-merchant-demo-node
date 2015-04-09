@@ -30,8 +30,6 @@ router.post('/adyen/notification', function(req, res){
 router.post('/payment', function(req, res){
   var payment = req.body
 
-  console.log('Paymant', payment);
-  console.log('User', req.user);
 
   if (!payment) {
     res.end()
