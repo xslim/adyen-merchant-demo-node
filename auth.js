@@ -136,6 +136,9 @@ module.exports = {
   },
 
   authApi: function(req, res, next) {
+    if (req.path == '/adyen/notification') {
+      return next();
+    }
     return passport.authenticate('bearer', { session: false })(req, res, next)
   }
 };
