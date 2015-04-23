@@ -17,13 +17,20 @@ function adyen4user(user) {
   return adyen;
 }
 
-function send_adyen(user, doc, callback) {
+function send_adyen(user, doc, charge, callback) {
   var adyen = adyen4user(user);
+
+  var options = {};
+  if (charge == true) {
+    options.captureDelayHours = 0;
+  }
+
 
   adyen.authoriseApplePay(doc.merchantReference,
     doc.paymentData,
     doc.currencyCode,
     Adyen.amount2minorUnits(doc.amount),
+    options,
     function(err, res, sentData){
 
       //console.log('Sending to Adyen', err, res, sentData);

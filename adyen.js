@@ -119,8 +119,9 @@ Adyen.prototype.request = function(webapp, service, method, data, callback) {
 
   if (debug) {
     console.log("Requesting", url);
-    console.log("Data", data);
+
   }
+  console.log("Requesting with Data", data);
 
   return rawrequest(url, data, this.options, function(err, response, body) {
     if (typeof body === "string") {
@@ -139,7 +140,7 @@ Adyen.prototype.request = function(webapp, service, method, data, callback) {
   });
 }
 
-Adyen.prototype.authoriseApplePay = function(reference, token, currency, value, callback) {
+Adyen.prototype.authoriseApplePay = function(reference, token, currency, value,  options, callback) {
   var data = {
     additionalData: {
       'payment.token': token
@@ -151,6 +152,11 @@ Adyen.prototype.authoriseApplePay = function(reference, token, currency, value, 
     merchantAccount: this.options.merchantAccount,
     reference: reference
   }
+
+  if (options && options.hasOwnProperty('captureDelayHours')) {
+    data.captureDelayHours = options['captureDelayHours'];
+  }
+
   this.request('pal', 'Payment', 'authorise', data, function(err, res){
     console.log("err", err);
     console.log("res", res);

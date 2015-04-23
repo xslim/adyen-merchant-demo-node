@@ -43,6 +43,12 @@ router.post('/', function(req, res){
     res.end()
   };
 
+  var capture = false;
+  if (payment.capture) {
+    capture = true;
+    delete payment.capture;
+  }
+
   var p = new Payment(payment)
   p.merchant = req.user;
 
@@ -60,7 +66,7 @@ router.post('/', function(req, res){
       console.log("Error saving token: "+err)
       res.end()
     } else {
-      adyen_helper.send(req.user, p, function (err, data, json){
+      adyen_helper.send(req.user, p, capture, function (err, data, json){
         res.redirect('/payments/'+p._id)
       })
     }
@@ -159,7 +165,7 @@ router.get('/:id/send', function(req, res){
       return
     }
 
-    adyen_helper.send(req.user, doc, function (err, data, json){
+    adyen_helper.send(req.user, doc, false, function (err, data, json){
       res.header('Cache-Control', 'no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
       res.redirect('back')
     })

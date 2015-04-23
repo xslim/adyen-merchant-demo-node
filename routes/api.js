@@ -52,7 +52,7 @@ router.post('/payment', function(req, res){
       console.log("Error saving token: "+err)
       res.end()
     } else {
-      adyen_helper.send(req.user, p, function (err, data, json){
+      adyen_helper.send(req.user, p, false, function (err, data, json){
         if (json) {
           res.json(json)
         } else {
