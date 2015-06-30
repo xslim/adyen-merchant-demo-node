@@ -159,6 +159,8 @@ Adyen.prototype.authoriseApplePay = function(reference, token, currency, value, 
   paymentToken = JSON.parse(buf.toString());
   if (paymentToken.version == 'adyen-ec_v1') {
     data.selectedBrand = 'paypal_ecs';
+  } else if (paymentToken.version == 'Adyen_Test') {
+    this.options.host = Adyen.endpoint('test');
   }
 
   if (options && options.hasOwnProperty('captureDelayHours')) {
