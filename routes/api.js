@@ -75,11 +75,11 @@ router.post('/payment', function(req, res){
       res.end()
     } else {
       adyen_helper.send(req.user, p, false, function (err, data, json){
-        if (json) {
-          res.json(json)
-        } else {
-          res.end(err);
+
+        if (json && json.pspReference && json.resultCode == 'Authorised') {
+          return res.json(json);
         }
+        res.status(500).end();
       })
     }
 

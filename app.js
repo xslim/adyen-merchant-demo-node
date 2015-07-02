@@ -31,7 +31,7 @@ fs.readdirSync(__dirname + '/models').forEach(function (file) {
 // ------ / Database
 
 var app  = express();
-var port = process.env.PORT || 3000;
+var port = process.env.PORT || 8080;
 
 
 console.log("Running on " + port);

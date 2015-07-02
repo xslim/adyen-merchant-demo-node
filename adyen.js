@@ -154,9 +154,17 @@ Adyen.prototype.authoriseApplePay = function(reference, token, currency, value, 
   }
 
   // PayPal_ECS hack
+  if (!token) {
+    return callback('Bad token', null, null);
+  }
 
   var buf = new Buffer(token, 'base64');
-  paymentToken = JSON.parse(buf.toString());
+
+  if (!buf) {
+    return callback('Token cant be processed', null, null);
+  }
+
+  var paymentToken = JSON.parse(buf.toString());
   if (paymentToken.version == 'adyen-ec_v1') {
     data.selectedBrand = 'paypal_ecs';
   } else if (paymentToken.version == 'Adyen_Test') {
