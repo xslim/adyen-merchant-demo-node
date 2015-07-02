@@ -27,8 +27,30 @@ router.post('/adyen/notification', function(req, res){
   res.json(Adyen.responses.notification);
 });
 
+router.post('/shipping', function(req, res){
+  var record = req.body;
+  console.log('Shipping to', record);
+
+  var sm_l_nd = { identifier: 'sm_l_nd', label: 'Next day', amount: '0.0', detail: 'Next day delivery' }
+  var sm_l_ex = { identifier: 'sm_l_ex', label: 'Express', amount: '3.0', detail: 'This day express delivery' }
+  var sm_i_nd = { identifier: 'sm_i_nd', label: 'Int Next day', amount: '6.0', detail: 'International Next day delivery' }
+  var sm_i_ex = { identifier: 'sm_i_ex', label: 'Int Express', amount: '20.0', detail: 'International This day express delivery' }
+
+  if (record.countryCode == 'GB') {
+    res.json([sm_l_nd, sm_l_ex]);
+  } else if (record.countryCode == 'US') {
+    res.json([sm_i_nd, sm_i_ex]);
+  } else {
+    console.log('Shipping not supported');
+    res.status(400).end();
+  }
+
+
+})
+
 router.post('/payment', function(req, res){
   var payment = req.body
+
 
 
   if (!payment) {
