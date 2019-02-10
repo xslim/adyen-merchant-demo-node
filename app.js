@@ -15,7 +15,7 @@ if (fs.existsSync(__dirname + '/.env' )) {
 // ------ Database
 
 var mongoose = require('mongoose');
-mongoose.connect(process.env.MONGOHQ_URL || "localhost");
+mongoose.connect(process.env.MONGODB_URI || "localhost");
 
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
