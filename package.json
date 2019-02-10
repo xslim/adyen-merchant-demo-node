@@ -26,7 +26,7 @@
     "passport-http-bearer": "*",
     "passport-local": "*",
     "pug": "^2.0.3",
-    "request": "*"
+    "request": "^2.88.0"
   },
   "engines": {
     "node": "*"
