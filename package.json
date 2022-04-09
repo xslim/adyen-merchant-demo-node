@@ -17,7 +17,7 @@
     "express": "*",
     "express-session": "*",
     "jade": "*",
-    "moment": "^2.9.0",
+    "moment": "^2.29.2",
     "mongoose": "^5.4.11",
     "node-env-file": "*",
     "node-uuid": "^1.4.3",
